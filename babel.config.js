@@ -6,6 +6,24 @@ module.exports = function (api) {
         "nativewind/babel",
         "@babel/preset-typescript"
       ],
-      plugins: ["@isograph"]
+      plugins: [
+        [
+          "@isograph",
+          {
+            // Point to where the generated __isograph folder is
+            artifact_directory: "./src/components",
+          }
+        ],
+        [
+          "module-resolver",
+          {
+            root: ["./src"],
+            alias: {
+              "@": "./src",
+              "@iso": "./src/components/__isograph/iso.ts",
+            },
+          },
+        ],
+      ]
     };
   };

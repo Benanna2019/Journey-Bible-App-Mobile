@@ -1,8 +1,10 @@
 {
+    "$schema": "https://raw.githubusercontent.com/isographlabs/isograph/refs/heads/main/libs/isograph-compiler/isograph-config-schema.json",
     "project_root": "./src/components",
     "artifact_directory": "./src/components",
     "schema": "./src/schema.graphql",
     "options": {
-        "on_invalid_id_type": "ignore"
+        "on_invalid_id_type": "ignore",
+        "module": "esmodule"
     }
 }

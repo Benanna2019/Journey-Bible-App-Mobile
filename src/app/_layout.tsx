@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import 'react-native-reanimated';
-import { ClerkProvider } from '@clerk/clerk-expo'
+import { ClerkProvider, useAuth } from '@clerk/clerk-expo'
 import { Slot } from 'expo-router'
 import { tokenCache } from '@clerk/clerk-expo/token-cache'
 import { PortalHost } from "@rn-primitives/portal"
@@ -14,37 +14,42 @@ import {
 import { useMemo, Suspense } from 'react';
 import "../../global.css"
 
-
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export const unstable_settings = {
   anchor: '(home)',
 };
 
-function makeNetworkRequest<T>(
-  query: IsographOperation | IsographPersistedOperation,
-  variables: unknown
-): Promise<T> {
-  if (query.kind === "PersistedOperation") {
-    throw new Error("Persisted Operations are not enabled in this project.");
-  }
+const GRAPHQL_ENDPOINT = "http://localhost:4000/api/graphql";
 
-  const queryText = query.text;
+/**
+ * Creates a network request function that includes the Clerk auth token
+ */
+function createNetworkRequest(getToken: () => Promise<string | null>) {
+  return async function makeNetworkRequest<T>(
+    query: IsographOperation | IsographPersistedOperation,
+    variables: unknown
+  ): Promise<T> {
+    if (query.kind === "PersistedOperation") {
+      throw new Error("Persisted Operations are not enabled in this project.");
+    }
 
-  // replacing with my local host graphql api to see if I can get it to work
-  const promise = fetch("http://localhost:8080/api/graphql", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query: queryText, variables }),
-  }).then(async (response) => {
+    // Get the Clerk session token
+    const token = await getToken();
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // Include the Bearer token if we have one
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify({ query: query.text, variables }),
+    });
+
     const json = await response.json();
 
     if (response.ok) {
-      /**
-       * Enforce that the network response follows the specification:: {@link https://spec.graphql.org/draft/#sec-Errors}.
-       */
       if (Object.hasOwn(json, "errors")) {
         if (!Array.isArray(json.errors) || json.errors.length === 0) {
           throw new Error("GraphQLSpecificationViolationError", {
@@ -60,34 +65,45 @@ function makeNetworkRequest<T>(
     throw new Error("NetworkError", {
       cause: json,
     });
-  });
-  return promise;
+  };
 }
 
-export default function RootLayout() {
+/**
+ * Inner layout that has access to Clerk's useAuth hook
+ */
+function IsographProviderWithAuth({ children }: { children: React.ReactNode }) {
+  const { getToken } = useAuth();
   const colorScheme = useColorScheme();
 
   const environment = useMemo(
     () =>
       createIsographEnvironment(
         createIsographStore(),
-        makeNetworkRequest,
+        createNetworkRequest(getToken),
         null,
-        typeof window != "undefined" ? console.log : null
+        typeof window !== "undefined" ? console.log : null
       ),
-    []
+    [getToken]
   );
 
   return (
+    <IsographEnvironmentProvider environment={environment}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Suspense fallback={null}>
+          {children}
+          <PortalHost />
+        </Suspense>
+      </ThemeProvider>
+    </IsographEnvironmentProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
     <ClerkProvider tokenCache={tokenCache}>
-      <IsographEnvironmentProvider environment={environment}>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Suspense fallback={<div>Loading Pokemon...</div>}>
-            <Slot />
-            <PortalHost />
-          </Suspense>
-        </ThemeProvider>
-      </IsographEnvironmentProvider>
+      <IsographProviderWithAuth>
+        <Slot />
+      </IsographProviderWithAuth>
     </ClerkProvider>
   );
 }

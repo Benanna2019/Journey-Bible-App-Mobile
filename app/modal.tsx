@@ -1,29 +1,34 @@
-import { Link } from 'expo-router';
-import { StyleSheet } from 'react-native';
-
+import { useRouter } from 'expo-router';
+import { View } from 'react-native';
+import { Button } from '@/components/ui/button';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ModalScreen() {
+  const router = useRouter();
+
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">This is a modal</ThemedText>
-      <Link href="/" dismissTo style={styles.link}>
-        <ThemedText type="link">Go to home screen</ThemedText>
-      </Link>
-    </ThemedView>
+    <View className="flex-1 items-center justify-center bg-background px-6">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>About Journey Bible</CardTitle>
+          <CardDescription>A brief overview of the app</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ThemedText className="text-muted-foreground leading-6">
+            Journey Bible is designed to help you engage with the scripture in a modern, 
+            meaningful way. We provide tools for study, reflection, and community.
+          </ThemedText>
+        </CardContent>
+        <View className="p-6 pt-0">
+          <Button 
+            className="w-full" 
+            onPress={() => router.back()}
+          >
+            Close
+          </Button>
+        </View>
+      </Card>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-});

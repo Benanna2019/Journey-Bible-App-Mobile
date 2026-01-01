@@ -8,11 +8,14 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "iso": "iso --config ./isograph.config.json",
+    "iso-watch": "iso --config ./isograph.config.json --watch"
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.19.14",
     "@expo/vector-icons": "^15.0.3",
+    "@isograph/react": "^0.5.2",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
@@ -40,8 +43,8 @@
     "expo-web-browser": "~15.0.10",
     "lucide-react-native": "^0.562.0",
     "nativewind": "^4.2.1",
-    "react": "19.1.4",
-    "react-dom": "19.1.4",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
     "react-native": "0.81.5",
     "react-native-css": "^3.0.1",
     "react-native-gesture-handler": "~2.28.0",
@@ -54,8 +57,11 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.28.5",
+    "@isograph/babel-plugin": "^0.5.2",
+    "@isograph/compiler": "^0.5.2",
     "@tailwindcss/postcss": "^4.1.18",
-    "@types/react": "~19.1.4",
+    "@types/react": "~19.1.1",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "postcss": "^8.5.6",

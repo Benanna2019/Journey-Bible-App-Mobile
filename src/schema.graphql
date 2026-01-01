@@ -1,0 +1,153 @@
+"""Base interface for all error types"""
+interface Error {
+  message: String!
+  status: Int!
+}
+
+"""User was not found in the system"""
+type UserNotFoundError implements Error {
+  message: String!
+  status: Int!
+  userId: String!
+}
+
+"""User already exists (e.g., email already registered)"""
+type UserAlreadyExistsError implements Error {
+  message: String!
+  status: Int!
+  email: String!
+}
+
+"""Authentication failed or token is invalid"""
+type UnauthorizedError implements Error {
+  message: String!
+  status: Int!
+}
+
+"""User lacks permission for this operation"""
+type ForbiddenError implements Error {
+  message: String!
+  status: Int!
+}
+
+"""Input validation failed"""
+type ValidationError implements Error {
+  message: String!
+  status: Int!
+  field: String
+}
+
+"""Generic server error"""
+type InternalError implements Error {
+  message: String!
+  status: Int!
+}
+
+"""Union of all possible error types for result patterns"""
+union UserError = UserNotFoundError | UserAlreadyExistsError | UnauthorizedError | ForbiddenError | ValidationError | InternalError
+
+"""A user in the Journey Bible application"""
+type User {
+  """Unique identifier for the user"""
+  _id: ID!
+
+  """User's email address"""
+  email: String!
+
+  """User's display name"""
+  name: String
+
+  """URL to user's avatar image"""
+  avatarUrl: String
+
+  """Clerk's user ID for authentication mapping"""
+  clerkUserId: String!
+
+  """When the user was created (Unix timestamp)"""
+  createdAt: Float!
+
+  """When the user was last updated (Unix timestamp)"""
+  updatedAt: Float!
+}
+
+"""Input for creating a new user"""
+input CreateUserInput {
+  email: String!
+  name: String
+  avatarUrl: String
+  clerkUserId: String!
+}
+
+"""Input for updating a user"""
+input UpdateUserInput {
+  name: String
+  avatarUrl: String
+}
+
+"""Paginated list of users"""
+type UserConnection {
+  users: [User!]!
+  cursor: String
+}
+
+"""Result type for user queries that can fail"""
+union UserResult = User | UserNotFoundError | UnauthorizedError
+
+"""Result type for user creation"""
+union CreateUserResult = User | UserAlreadyExistsError | ValidationError | UnauthorizedError
+
+"""Result type for user update"""
+union UpdateUserResult = User | UserNotFoundError | ValidationError | UnauthorizedError
+
+type Query {
+  """Get the currently authenticated user"""
+  me: UserResult!
+
+  """Get a user by ID (requires authentication)"""
+  user(id: ID!): UserResult!
+
+  """List users with pagination (admin only in production)"""
+  users(limit: Int, cursor: String): UserConnection!
+
+  """Health check endpoint"""
+  health: String!
+
+  """
+  [DEV ONLY] List all users without authentication - for testing Convex connection
+  """
+  testUsers: [User!]!
+
+  """[DEV ONLY] Seed test users into the database"""
+  seedUsers: SeedResult!
+
+  """List all tasks - no auth required (for testing)"""
+  tasks: [Task!]!
+}
+
+type SeedResult {
+  created: Int!
+  message: String!
+}
+
+type Mutation {
+  """Create a new user account"""
+  createUser(input: CreateUserInput!): CreateUserResult!
+
+  """Update the current user's profile"""
+  updateMe(input: UpdateUserInput!): UpdateUserResult!
+
+  """Update a user by ID (admin only)"""
+  updateUser(id: ID!, input: UpdateUserInput!): UpdateUserResult!
+
+  """Create a new task"""
+  createTask(text: String!): Task!
+
+  """Toggle task completion"""
+  toggleTask(id: ID!): Task
+}
+
+type Task {
+  _id: ID!
+  text: String!
+  isCompleted: Boolean!
+}
